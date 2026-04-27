@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Scientific Calculator</title>
+    <style>
+        :root {
+            --bg-body: #1c1c1e;
+            --calc-bg: #2c2c2e;
+            --display-bg: #1a1a1c;
+            --display-text: #fff;
+            --expression-color: #b0b0b8;
+            --btn-bg: #48484a;
+            --btn-hover: #5a5a5c;
+            --btn-number: #636366;
+            --btn-number-hover: #78787a;
+            --btn-operator: #ff9f0a;
+            --btn-operator-hover: #ffb340;
+            --btn-function: #3a3a3c;
+            --btn-function-hover: #4d4d4f;
+            --btn-equals: #ff9f0a;
+            --btn-equals-hover: #ffb340;
+            --btn-clear: #d63c3c;
+            --btn-clear-hover: #e65050;
+            --btn-del: #a0a0a4;
+            --btn-del-hover: #b8b8bc;
+            --btn-ans: #5e5e60;
+            --btn-ans-hover: #747476;
+            --btn-special: #0a84ff;
+            --btn-special-hover: #409cff;
+            --text-on-operator: #000;
+            --text-on-special: #fff;
+            --radius: 10px;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            --transition: 0.15s ease;
+            --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font);
+            background: linear-gradient(160deg, #1a1a2e, #14141a);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 420px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .mode-selector {
+            display: flex;
+            background: #2c2c2e;
+            border-radius: 30px;
+            padding: 5px;
+            gap: 4px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 380px;
+        }
+        .mode-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            background: transparent;
+            color: #b0b0b8;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 26px;
+            transition: var(--transition);
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            position: relative;
+            z-index: 1;
+        }
+        .mode-btn.active {
+            background: #ff9f0a;
+            color: #000;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(255, 159, 10, 0.4);
+        }
+        .mode-btn:hover:not(.active) {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .calculator-wrapper {
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+        }
+        .calculator {
+            width: 100%;
+            background: var(--calc-bg);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            border: 1px solid #3a3a3e;
+            position: relative;
+            overflow: hidden;
+            transition: 0.3s;
+        }
+        .calculator::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+        }
+
+        /* Display */
+        .display {
+            background: var(--display-bg);
+            border-radius: var(--radius);
+            padding: 18px 16px;
+            text-align: right;
+            min-height: 90px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: flex-end;
+            border: 1px solid #3a3a3e;
+            position: relative;
+        }
+        .display .expression {
+            font-size: 16px;
+            color: var(--expression-color);
+            word-break: break-all;
+            min-height: 22px;
+            width: 100%;
+            text-align: right;
+            line-height: 1.3;
+            margin-bottom: 4px;
+            letter-spacing: 0.5px;
+        }
+        .display .result {
+            font-size: 38px;
+            font-weight: 300;
+            color: var(--display-text);
+            word-break: break-all;
+            width: 100%;
+            text-align: right;
+            line-height: 1.1;
+            letter-spacing: 0.5px;
+            transition: 0.2s;
+        }
+        .display .result.small {
+            font-size: 24px;
+        }
+        .display .result.xsmall {
+            font-size: 18px;
+        }
+
+        /* Button Grids */
+        .buttons-grid {
+            display: grid;
+            gap: 8px;
+        }
+
+        /* Normal Calculator Buttons */
+        .normal-buttons {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .calc-btn {
+            border: none;
+            border-radius: var(--radius);
+            font-size: 20px;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 16px 8px;
+            transition: var(--transition);
+            letter-spacing: 0.3px;
+            position: relative;
+            overflow: hidden;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+            font-family: var(--font);
+            min-height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #48484a;
+            color: #fff;
+        }
+        .calc-btn:active {
+            transform: scale(0.95);
+            transition: 0.05s;
+        }
+        .calc-btn:hover {
+            filter: brightness(1.15);
+        }
+
+        .btn-number {
+            background: #636366;
+            color: #fff;
+            font-size: 24px;
+            font-weight: 400;
+        }
+        .btn-operator {
+            background: #ff9f0a;
+            color: #000;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .btn-operator.active-op {
+            background: #fff;
+            color: #ff9f0a;
+            box-shadow: 0 0 18px rgba(255, 159, 10, 0.7);
+        }
+        .btn-function {
+            background: #3a3a3c;
+            color: #ccc;
+            font-size: 17px;
+        }
+        .btn-equals {
+            background: #ff9f0a;
+            color: #000;
+            font-size: 26px;
+            font-weight: 600;
+        }
+        .btn-zero {
+            grid-column: span 2;
+            border-radius: var(--radius);
+            justify-content: flex-start;
+            padding-left: 28px;
+        }
+
+        /* Scientific Calculator Buttons - layout specific */
+        .complex-buttons {
+            grid-template-columns: repeat(5, 1fr);
+            gap: 7px;
+        }
+        .complex-buttons .calc-btn {
+            font-size: 15px;
+            padding: 12px 4px;
+            min-height: 50px;
+            background: #48484a;
+            color: #fff;
+            border-radius: 8px;
+            font-weight: 500;
+            letter-spacing: 0.2px;
+        }
+        .complex-buttons .btn-number {
+            background: #636366;
+            color: #fff;
+            font-size: 18px;
+        }
+        .complex-buttons .btn-operator {
+            background: #ff9f0a;
+            color: #000;
+            font-weight: 600;
+        }
+        .complex-buttons .btn-equals {
+            background: #ff9f0a;
+            color: #000;
+            font-size: 22px;
+            font-weight: 700;
+        }
+        .complex-buttons .btn-function {
+            background: #3a3a3c;
+            color: #ddd;
+        }
+        .complex-buttons .btn-clear {
+            background: #d63c3c;
+            color: #fff;
+            font-weight: 600;
+        }
+        .complex-buttons .btn-del {
+            background: #a0a0a4;
+            color: #000;
+            font-weight: 600;
+        }
+        .complex-buttons .btn-ans {
+            background: #5e5e60;
+            color: #fff;
+        }
+        .complex-buttons .btn-special {
+            background: #0a84ff;
+            color: #fff;
+            font-weight: 600;
+        }
+        .complex-buttons .btn-10x {
+            background: #3a6ea5;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.25);
+            letter-spacing: 1px;
+            font-weight: 400;
+            padding: 4px 0;
+        }
+        .footer:hover {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .calculator {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @media (max-width: 440px) {
+            .calculator {
+                padding: 14px;
+                gap: 10px;
+            }
+            .calc-btn {
+                padding: 12px 3px;
+                font-size: 15px;
+                min-height: 46px;
+            }
+            .display .result {
+                font-size: 30px;
+            }
+            .complex-buttons .calc-btn {
+                font-size: 12px;
+                padding: 10px 2px;
+                min-height: 40px;
+            }
+            .complex-buttons .btn-number {
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Mode Selector -->
+        <div class="mode-selector">
+            <button class="mode-btn active" id="btnNormalMode" onclick="switchMode('normal')">📱 Normal</button>
+            <button class="mode-btn" id="btnComplexMode" onclick="switchMode('complex')">🔬 Scientific</button>
+        </div>
+
+        <!-- Calculator Wrapper -->
+        <div class="calculator-wrapper">
+            <!-- Normal Calculator (unchanged) -->
+            <div class="calculator" id="normalCalculator">
+                <div class="display" id="normalDisplay">
+                    <div class="expression" id="normalExpression"></div>
+                    <div class="result" id="normalResult">0</div>
+                </div>
+                <div class="buttons-grid normal-buttons" id="normalButtons">
+                    <button class="calc-btn btn-function" onclick="normalInput('clear')">AC</button>
+                    <button class="calc-btn btn-function" onclick="normalInput('sign')">+/−</button>
+                    <button class="calc-btn btn-function" onclick="normalInput('percent')">%</button>
+                    <button class="calc-btn btn-operator" onclick="normalInput('divide')">÷</button>
+                    <button class="calc-btn btn-number" onclick="normalInput('7')">7</button>
+                    <button class="calc-btn btn-number" onclick="normalInput('8')">8</button>
+                    <button class="calc-btn btn-number" onclick="normalInput('9')">9</button>
+                    <button class="calc-btn btn-operator" onclick="normalInput('multiply')">×</button>
+                    <button class="calc-btn btn-number" onclick="normalInput('4')">4</button>
+                    <button class="calc-btn btn-number" onclick="normalInput('5')">5</button>
+                    <button class="calc-btn btn-number" onclick="normalInput('6')">6</button>
+                    <button class="calc-btn btn-operator" onclick="normalInput('subtract')">−</button>
+                    <button class="calc-btn btn-number" onclick="normalInput('1')">1</button>
+                    <button class="calc-btn btn-number" onclick="normalInput('2')">2</button>
+                    <button class="calc-btn btn-number" onclick="normalInput('3')">3</button>
+                    <button class="calc-btn btn-operator" onclick="normalInput('add')">+</button>
+                    <button class="calc-btn btn-number btn-zero" onclick="normalInput('0')">0</button>
+                    <button class="calc-btn btn-number" onclick="normalInput('.')">.</button>
+                    <button class="calc-btn btn-equals" onclick="normalInput('equals')">=</button>
+                </div>
+            </div>
+
+            <!-- Scientific Calculator - redesigned layout -->
+            <div class="calculator" id="complexCalculator" style="display: none;">
+                <div class="display" id="complexDisplay">
+                    <div class="expression" id="complexExpression"></div>
+                    <div class="result" id="complexResult">0</div>
+                    <div class="result-line-2" id="complexResultSecondary"></div>
+                </div>
+                <div class="buttons-grid complex-buttons" id="complexButtons">
+                    <!-- Row 1: trigonometric functions + log/ln -->
+                    <button class="calc-btn btn-function" onclick="complexInput('sin')">sin</button>
+                    <button class="calc-btn btn-function" onclick="complexInput('cos')">cos</button>
+                    <button class="calc-btn btn-function" onclick="complexInput('tan')">tan</button>
+                    <button class="calc-btn btn-function" onclick="complexInput('log')">log</button>
+                    <button class="calc-btn btn-function" onclick="complexInput('ln')">ln</button>
+
+                    <!-- Row 2: inverse trig + brackets -->
+                    <button class="calc-btn btn-function" onclick="complexInput('asin')">sin⁻¹</button>
+                    <button class="calc-btn btn-function" onclick="complexInput('acos')">cos⁻¹</button>
+                    <button class="calc-btn btn-function" onclick="complexInput('atan')">tan⁻¹</button>
+                    <button class="calc-btn btn-function" onclick="complexInput('(')">(</button>
+                    <button class="calc-btn btn-function" onclick="complexInput(')')">)</button>
+
+                    <!-- Row 3: powers and roots -->
+                    <button class="calc-btn btn-function" onclick="complexInput('square')">x²</button>
+                    <button class="calc-btn btn-function" onclick="complexInput('power')">x^y</button>
+                    <button class="calc-btn btn-function" onclick="complexInput('sqrt')">√</button>
+                    <button class="calc-btn btn-function" onclick="complexInput('cbrt')">∛</button>
+                    <button class="calc-btn btn-function" onclick="complexInput('reciprocal')">1/x</button>
+
+                    <!-- Row 4: combinatorics + constants -->
+                    <button class="calc-btn btn-special" onclick="complexInput('nCr')">nCr</button>
+                    <button class="calc-btn btn-special" onclick="complexInput('nPr')">nPr</button>
+                    <button class="calc-btn btn-special" onclick="complexInput('factorial')">n!</button>
+                    <button class="calc-btn btn-special" onclick="complexInput('pi')">π</button>
+                    <button class="calc-btn btn-special" onclick="complexInput('e')">e</button>
+
+                    <!-- Row 5: 7, 8, 9, DEL, AC -->
+                    <button class="calc-btn btn-number" onclick="complexInput('7')">7</button>
+                    <button class="calc-btn btn-number" onclick="complexInput('8')">8</button>
+                    <button class="calc-btn btn-number" onclick="complexInput('9')">9</button>
+                    <button class="calc-btn btn-del" onclick="complexInput('delete')">DEL</button>
+                    <button class="calc-btn btn-clear" onclick="complexInput('clear')">AC</button>
+
+                    <!-- Row 6: 4, 5, 6, ×, ÷ -->
+                    <button class="calc-btn btn-number" onclick="complexInput('4')">4</button>
+                    <button class="calc-btn btn-number" onclick="complexInput('5')">5</button>
+                    <button class="calc-btn btn-number" onclick="complexInput('6')">6</button>
+                    <button class="calc-btn btn-operator" onclick="complexInput('*')">×</button>
+                    <button class="calc-btn btn-operator" onclick="complexInput('/')">÷</button>
+
+                    <!-- Row 7: 1, 2, 3, +, − -->
+                    <button class="calc-btn btn-number" onclick="complexInput('1')">1</button>
+                    <button class="calc-btn btn-number" onclick="complexInput('2')">2</button>
+                    <button class="calc-btn btn-number" onclick="complexInput('3')">3</button>
+                    <button class="calc-btn btn-operator" onclick="complexInput('+')">+</button>
+                    <button class="calc-btn btn-operator" onclick="complexInput('-')">−</button>
+
+                    <!-- Row 8: 0, ., 10^x, Ans, = -->
+                    <button class="calc-btn btn-number" onclick="complexInput('0')">0</button>
+                    <button class="calc-btn btn-number" onclick="complexInput('.')">.</button>
+                    <button class="calc-btn btn-10x" onclick="complexInput('10pow')">10ˣ</button>
+                    <button class="calc-btn btn-ans" onclick="complexInput('ans')">Ans</button>
+                    <button class="calc-btn btn-equals" onclick="complexInput('equals')">=</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">Developed by Prasiddha Timalsina</div>
+    </div>
+
+    <script>
+        // ==================== MODE SWITCHING ====================
+        let currentMode = 'normal';
+        function switchMode(mode) {
+            currentMode = mode;
+            document.getElementById('normalCalculator').style.display = mode === 'normal' ? 'flex' : 'none';
+            document.getElementById('complexCalculator').style.display = mode === 'complex' ? 'flex' : 'none';
+            document.getElementById('btnNormalMode').classList.toggle('active', mode === 'normal');
+            document.getElementById('btnComplexMode').classList.toggle('active', mode === 'complex');
+        }
+
+        // ==================== NORMAL CALCULATOR ====================
+        const normalState = {
+            currentOperand: '0',
+            previousOperand: '',
+            operation: null,
+            shouldResetScreen: false,
+            lastResult: null,
+            expressionDisplay: '',
+        };
+
+        function normalInput(action) {
+            const state = normalState;
+            switch (action) {
+                case 'clear':
+                    state.currentOperand = '0'; state.previousOperand = ''; state.operation = null;
+                    state.shouldResetScreen = false; state.lastResult = null; state.expressionDisplay = '';
+                    clearOperatorHighlight(); break;
+                case 'sign':
+                    if (state.currentOperand !== '0' && state.currentOperand !== '') {
+                        state.currentOperand = state.currentOperand.startsWith('-') ? state.currentOperand.slice(1) : '-' + state.currentOperand;
+                    } break;
+                case 'percent':
+                    const current = parseFloat(state.currentOperand);
+                    if (!isNaN(current)) {
+                        if (state.previousOperand && state.operation) {
+                            state.currentOperand = formatNormalNumber((parseFloat(state.previousOperand) * current) / 100);
+                        } else {
+                            state.currentOperand = formatNormalNumber(current / 100);
+                        }
+                    } break;
+                case 'add': case 'subtract': case 'multiply': case 'divide':
+                    handleOperator(action); break;
+                case 'equals': handleEquals(); break;
+                case '.':
+                    if (state.shouldResetScreen) { state.currentOperand = '0'; state.shouldResetScreen = false; }
+                    if (!state.currentOperand.includes('.')) state.currentOperand += '.'; break;
+                default:
+                    if (state.shouldResetScreen) { state.currentOperand = ''; state.shouldResetScreen = false; }
+                    if (state.currentOperand === '0' && action !== '0') state.currentOperand = action;
+                    else if (state.currentOperand === '0' && action === '0') {}
+                    else if (state.currentOperand.length < 15) state.currentOperand += action; break;
+            }
+            updateNormalDisplay();
+        }
+
+        function handleOperator(action) {
+            const state = normalState;
+            const opMap = { 'add': '+', 'subtract': '-', 'multiply': '*', 'divide': '/' };
+            if (state.operation && !state.shouldResetScreen) {
+                const result = calculate(parseFloat(state.previousOperand), parseFloat(state.currentOperand), state.operation);
+                state.currentOperand = formatNormalNumber(result);
+                state.previousOperand = state.currentOperand;
+                state.operation = opMap[action];
+                state.shouldResetScreen = true;
+            } else {
+                state.previousOperand = state.currentOperand;
+                state.operation = opMap[action];
+                state.shouldResetScreen = true;
+            }
+            highlightOperator(action);
+        }
+
+        function handleEquals() {
+            const state = normalState;
+            if (state.operation && state.previousOperand !== '') {
+                const result = calculate(parseFloat(state.previousOperand), parseFloat(state.currentOperand), state.operation);
+                state.currentOperand = formatNormalNumber(result);
+                state.lastResult = result;
+                state.previousOperand = ''; state.operation = null;
+                state.shouldResetScreen = true; clearOperatorHighlight();
+            } else if (state.lastResult !== null) {
+                state.currentOperand = formatNormalNumber(state.lastResult);
+            }
+        }
+
+        function calculate(a, b, op) {
+            switch (op) { case '+': return a + b; case '-': return a - b; case '*': return a * b; case '/': return b === 0 ? NaN : a / b; }
+        }
+
+        function formatNormalNumber(num) {
+            if (isNaN(num) || !isFinite(num)) return 'Error';
+            if (Math.abs(num) >= 1e15 || (Math.abs(num) < 1e-10 && num !== 0)) return num.toExponential(10);
+            let str = parseFloat(num.toPrecision(12)).toString();
+            if (str.length > 16) str = parseFloat(num.toPrecision(10)).toString();
+            if (str.length > 16) str = num.toExponential(8);
+            return str;
+        }
+
+        function highlightOperator(action) {
+            clearOperatorHighlight();
+            const opSymbols = { 'add': '+', 'subtract': '−', 'multiply': '×', 'divide': '÷' };
+            document.querySelectorAll('#normalButtons .btn-operator').forEach(btn => {
+                if (btn.textContent.trim() === opSymbols[action]) btn.classList.add('active-op');
+            });
+        }
+        function clearOperatorHighlight() {
+            document.querySelectorAll('#normalButtons .btn-operator').forEach(b => b.classList.remove('active-op'));
+        }
+
+        function updateNormalDisplay() {
+            document.getElementById('normalExpression').textContent = normalState.expressionDisplay || '';
+            const el = document.getElementById('normalResult');
+            el.textContent = normalState.currentOperand;
+            el.classList.remove('small', 'xsmall');
+            if (normalState.currentOperand.length > 14) el.classList.add('small');
+            if (normalState.currentOperand.length > 20) el.classList.add('xsmall');
+        }
+
+        // ==================== COMPLEX SCIENTIFIC CALCULATOR ====================
+        const complexState = {
+            expression: '',
+            result: null,
+            lastAnswer: null,
+            justEvaluated: false,
+            // fixed DEG mode only
+            angleMode: 'DEG'
+        };
+
+        function complexInput(action) {
+            const state = complexState;
+            if (state.justEvaluated && action !== 'clear' && action !== 'ans' &&
+                !['+','-','*','/','^',')'].includes(action) &&
+                !['sin','cos','tan','asin','acos','atan','log','ln','square','power','sqrt','cbrt',
+                  'reciprocal','nCr','nPr','factorial','10pow','delete','equals','pi','e'].includes(action) && isNaN(action)) {
+                state.expression = '';
+                state.result = null;
+                state.justEvaluated = false;
+            }
+
+            switch (action) {
+                case 'clear':
+                    state.expression = ''; state.result = null; state.justEvaluated = false; break;
+                case 'delete':
+                    state.expression = removeLastToken(state.expression); state.justEvaluated = false; break;
+                case 'equals':
+                    evaluateComplexExpression(); state.justEvaluated = true; updateComplexDisplay(); return;
+                case 'ans':
+                    if (state.lastAnswer !== null) {
+                        state.expression += formatComplexResult(state.lastAnswer);
+                        state.justEvaluated = false;
+                    } break;
+                case 'square': state.expression += '^2'; break;
+                case 'power': state.expression += '^'; break;
+                case 'sqrt': state.expression += 'sqrt('; break;
+                case 'cbrt': state.expression += 'cbrt('; break;
+                case 'reciprocal': state.expression += '^(-1)'; break;
+                case 'nCr': state.expression += 'nCr('; break;
+                case 'nPr': state.expression += 'nPr('; break;
+                case 'factorial': state.expression += '!'; break;
+                case '10pow': state.expression += '10^('; break;
+                case 'pi': state.expression += 'π'; break;
+                case 'e': state.expression += 'e'; break;
+                case 'sin': state.expression += 'sin('; break;
+                case 'cos': state.expression += 'cos('; break;
+                case 'tan': state.expression += 'tan('; break;
+                case 'asin': state.expression += 'asin('; break;
+                case 'acos': state.expression += 'acos('; break;
+                case 'atan': state.expression += 'atan('; break;
+                case 'log': state.expression += 'log('; break;
+                case 'ln': state.expression += 'ln('; break;
+                default:
+                    if (state.justEvaluated && ['+','-','*','/','^'].includes(action)) {
+                        state.expression = formatComplexResult(state.result) + action;
+                        state.justEvaluated = false;
+                    } else {
+                        state.expression += action;
+                        state.justEvaluated = false;
+                    }
+            }
+            updateComplexDisplay();
+        }
+
+        function removeLastToken(expr) {
+            const multi = ['sin(','cos(','tan(','asin(','acos(','atan(','log(','ln(','sqrt(','cbrt(','nCr(','nPr(','10^(','^(-1)'];
+            for (const m of multi) if (expr.endsWith(m)) return expr.slice(0, -m.length);
+            if (expr.endsWith('^2')) return expr.slice(0, -2);
+            return expr.slice(0, -1);
+        }
+
+        function updateComplexDisplay() {
+            const state = complexState;
+            document.getElementById('complexExpression').textContent = state.expression || '';
+            const resultEl = document.getElementById('complexResult');
+            const secondaryEl = document.getElementById('complexResultSecondary');
+
+            if (state.justEvaluated && state.result !== null) {
+                const formatted = formatComplexResult(state.result);
+                resultEl.textContent = formatted;
+                adjustFont(resultEl, formatted);
+                secondaryEl.textContent = '';
+            } else if (state.expression === '') {
+                resultEl.textContent = state.result !== null ? formatComplexResult(state.result) : '0';
+                adjustFont(resultEl, resultEl.textContent);
+                secondaryEl.textContent = '';
+            } else {
+                try {
+                    const preview = evaluateExpression(state.expression);
+                    if (preview !== null && !isComplexNaN(preview)) {
+                        secondaryEl.textContent = '≈ ' + formatComplexResult(preview);
+                    } else {
+                        secondaryEl.textContent = '';
+                    }
+                } catch (e) {
+                    secondaryEl.textContent = '';
+                }
+            }
+        }
+
+        function adjustFont(el, text) {
+            el.classList.remove('small', 'xsmall');
+            if (text.length > 18) el.classList.add('small');
+            if (text.length > 28) el.classList.add('xsmall');
+        }
+
+        function evaluateComplexExpression() {
+            const state = complexState;
+            if (state.expression.trim() === '') {
+                state.result = state.lastAnswer;
+                updateComplexDisplay();
+                return;
+            }
+            try {
+                const result = evaluateExpression(state.expression);
+                state.result = result;
+                state.lastAnswer = result;
+                state.expression = '';
+                state.justEvaluated = true;
+                updateComplexDisplay();
+            } catch (e) {
+                state.result = { re: NaN, im: 0, isComplex: false };
+                state.expression = '';
+                state.justEvaluated = true;
+                updateComplexDisplay();
+            }
+        }
+
+        function isComplexNaN(comp) {
+            if (typeof comp === 'number') return isNaN(comp);
+            return comp && typeof comp === 'object' ? (isNaN(comp.re) || isNaN(comp.im)) : true;
+        }
+
+        // ==================== EXPRESSION PARSER ====================
+        function evaluateExpression(expr) {
+            let processed = preprocessExpression(expr);
+            const tokens = tokenize(processed);
+            const parser = new Parser(tokens, complexState.angleMode);
+            const result = parser.parse();
+            if (containsImaginary(processed) && typeof result === 'number') {
+                return { re: result, im: 0, isComplex: true };
+            }
+            return result;
+        }
+
+        function preprocessExpression(expr) {
+            let p = expr.replace(/π/g, 'pi');
+            p = p.replace(/(\d)(sin|cos|tan|asin|acos|atan|log|ln|sqrt|cbrt|nCr|nPr|pi|e|i|\(|10\()/g, '$1*$2');
+            p = p.replace(/(\))(\d)/g, '$1*$2');
+            p = p.replace(/(\))(\()/g, '$1*$2');
+            p = p.replace(/(pi|e|i)(\d)/g, '$1*$2');
+            p = p.replace(/(\d)(pi|e|i)/g, '$1*$2');
+            p = p.replace(/\)\(/g, ')*(');
+            p = p.replace(/(\d+(?:\.\d+)?)E([+-]?\d+)/g, '$1*10^($2)');
+            p = p.replace(/E([+-]?\d+)/g, '*10^($1)');
+            p = p.replace(/\(-/g, '(0-');
+            if (p.startsWith('-') && !p.startsWith('-(')) p = '0' + p;
+            return p;
+        }
+
+        function containsImaginary(expr) {
+            return /(?<![a-zA-Z])i(?![a-zA-Z])/.test(expr);
+        }
+
+        function tokenize(expr) {
+            const tokens = [];
+            let i = 0;
+            while (i < expr.length) {
+                if (expr[i] === ' ') { i++; continue; }
+                const funcs = ['sin','cos','tan','asin','acos','atan','log','ln','sqrt','cbrt','nCr','nPr','pi','e','abs','exp'];
+                let matched = false;
+                for (const f of funcs) {
+                    if (expr.startsWith(f, i)) { tokens.push({type:'function',value:f}); i+=f.length; matched=true; break; }
+                }
+                if (matched) continue;
+                if (/[0-9.]/.test(expr[i])) { let num=''; while (i<expr.length && /[0-9.]/.test(expr[i])) { num+=expr[i]; i++; } tokens.push({type:'number',value:num}); continue; }
+                if ('+-*/^!'.includes(expr[i])) { tokens.push({type:'operator',value:expr[i]}); i++; continue; }
+                if (expr[i]==='(') { tokens.push({type:'lparen',value:'('}); i++; continue; }
+                if (expr[i]===')') { tokens.push({type:'rparen',value:')'}); i++; continue; }
+                if (expr[i]===',') { tokens.push({type:'comma',value:','}); i++; continue; }
+                if (expr[i]==='i') { tokens.push({type:'imaginary',value:'i'}); i++; continue; }
+                i++;
+            }
+            return tokens;
+        }
+
+        class Parser {
+            constructor(tokens, angleMode) { this.tokens=tokens; this.pos=0; this.angleMode=angleMode; }
+            peek() { return this.tokens[this.pos] || null; }
+            consume() { return this.tokens[this.pos++] || null; }
+            expect(type) { const t=this.peek(); if(!t||t.type!==type) throw new Error(`Expected ${type}`); return this.consume(); }
+            parse() { return this.parseExpression(); }
+            parseExpression() { let left=this.parseTerm(); while(this.peek()&&this.peek().type==='operator'&&'+-'.includes(this.peek().value)){ let op=this.consume().value; let right=this.parseTerm(); left=this.applyOperator(left,op,right); } return left; }
+            parseTerm() { let left=this.parsePower(); while(this.peek()&&this.peek().type==='operator'&&'*/'.includes(this.peek().value)){ let op=this.consume().value; let right=this.parsePower(); left=this.applyOperator(left,op,right); } return left; }
+            parsePower() { let left=this.parseUnary(); while(this.peek()&&this.peek().type==='operator'&&this.peek().value==='^'){ this.consume(); let right=this.parseUnary(); left=this.applyOperator(left,'^',right); } return left; }
+            parseUnary() { if(this.peek()&&this.peek().type==='operator'&&this.peek().value==='-'){ this.consume(); return this.applyOperator(makeNumber(0),'-',this.parseUnary()); } if(this.peek()&&this.peek().type==='operator'&&this.peek().value==='+'){ this.consume(); return this.parseUnary(); } return this.parseFactorial(); }
+            parseFactorial() { let value=this.parseAtom(); while(this.peek()&&this.peek().type==='operator'&&this.peek().value==='!'){ this.consume(); value=this.factorial(value); } return value; }
+            parseAtom() {
+                const token=this.peek(); if(!token) throw new Error('Unexpected end');
+                if(token.type==='number') { this.consume(); return makeNumber(parseFloat(token.value)); }
+                if(token.type==='function'&&token.value==='pi') { this.consume(); return makeNumber(Math.PI); }
+                if(token.type==='function'&&token.value==='e') { this.consume(); return makeNumber(Math.E); }
+                if(token.type==='imaginary') { this.consume(); return {re:0,im:1,isComplex:true}; }
+                if(token.type==='function') { return this.parseFunction(); }
+                if(token.type==='lparen') { this.consume(); const expr=this.parseExpression(); this.expect('rparen'); return expr; }
+                throw new Error(`Unexpected token: ${token.value}`);
+            }
+            parseFunction() {
+                const funcToken=this.consume(); const name=funcToken.value;
+                if(['nCr','nPr'].includes(name)) { this.expect('lparen'); const args=[]; args.push(this.parseExpression()); while(this.peek()&&this.peek().type==='comma'){ this.consume(); args.push(this.parseExpression()); } this.expect('rparen'); return this.evaluateSpecialFunction(name,args); }
+                this.expect('lparen'); const arg=this.parseExpression(); this.expect('rparen'); return this.evaluateFunction(name,arg);
+            }
+            evaluateFunction(name, arg) { const val=this.toReal(arg); const isDeg=this.angleMode==='DEG'; let r; switch(name){ case'sin': r=Math.sin(isDeg?val*Math.PI/180:val); break; case'cos': r=Math.cos(isDeg?val*Math.PI/180:val); break; case'tan': r=Math.tan(isDeg?val*Math.PI/180:val); break; case'asin': r=Math.asin(val); if(isDeg) r=r*180/Math.PI; break; case'acos': r=Math.acos(val); if(isDeg) r=r*180/Math.PI; break; case'atan': r=Math.atan(val); if(isDeg) r=r*180/Math.PI; break; case'log': r=Math.log10(val); break; case'ln': r=Math.log(val); break; case'sqrt': r=Math.sqrt(val); break; case'cbrt': r=Math.cbrt(val); break; default: r=0; } return makeNumber(r); }
+            evaluateSpecialFunction(name, args) {
+                if(name==='nCr') { if(args.length>=2){ let n=Math.round(this.toReal(args[0])), r=Math.round(this.toReal(args[1])); return makeNumber(combinations(n,r)); } }
+                if(name==='nPr') { if(args.length>=2){ let n=Math.round(this.toReal(args[0])), r=Math.round(this.toReal(args[1])); return makeNumber(permutations(n,r)); } }
+                return makeNumber(0);
+            }
+            toReal(value) { return typeof value==='number'?value:(value&&typeof value==='object'?value.re:0); }
+            applyOperator(left,op,right) {
+                const lc=typeof left==='object'&&left.isComplex, rc=typeof right==='object'&&right.isComplex;
+                if(lc||rc) return this.complexOp(this.toComplexObj(left),op,this.toComplexObj(right));
+                const l=this.toReal(left), r=this.toReal(right);
+                switch(op){ case'+': return makeNumber(l+r); case'-': return makeNumber(l-r); case'*': return makeNumber(l*r); case'/': return makeNumber(r===0?NaN:l/r); case'^': return makeNumber(Math.pow(l,r)); } return makeNumber(0);
+            }
+            toComplexObj(v) { if(typeof v==='number') return {re:v,im:0,isComplex:true}; return v&&typeof v==='object'?{re:v.re||0,im:v.im||0,isComplex:true}:{re:0,im:0,isComplex:true}; }
+            complexOp(a,op,b) {
+                const are=a.re, aim=a.im, bre=b.re, bim=b.im;
+                switch(op) { case'+': return {re:are+bre,im:aim+bim,isComplex:true}; case'-': return {re:are-bre,im:aim-bim,isComplex:true}; case'*': return {re:are*bre-aim*bim,im:are*bim+aim*bre,isComplex:true}; case'/': { const d=bre*bre+bim*bim; if(d===0) return {re:NaN,im:NaN,isComplex:true}; return {re:(are*bre+aim*bim)/d,im:(aim*bre-are*bim)/d,isComplex:true}; } case'^': { if(Math.abs(bim)<1e-15&&Math.abs(aim)<1e-15) return {re:Math.pow(are,bre),im:0,isComplex:true}; if(Math.abs(bim)<1e-15&&Math.abs(aim)>1e-15&&Number.isInteger(bre)&&bre>=0){ let n=Math.round(bre); let res={re:1,im:0,isComplex:true}; for(let i=0;i<n;i++) res=this.complexOp(res,'*',a); return res; } const r=Math.sqrt(are*are+aim*aim); const theta=Math.atan2(aim,are); const newR=Math.pow(r,bre)*Math.exp(-bim*theta); const newTheta=bre*theta+bim*Math.log(r); return {re:newR*Math.cos(newTheta),im:newR*Math.sin(newTheta),isComplex:true}; } } return {re:0,im:0,isComplex:true};
+            }
+            factorial(value) { const v=this.toReal(value); if(v<0||!Number.isInteger(v)) return makeNumber(NaN); if(v>170) return makeNumber(Infinity); let res=1; for(let i=2;i<=v;i++) res*=i; return makeNumber(res); }
+        }
+
+        function makeNumber(val) { return val; }
+        function combinations(n,r) { if(r<0||r>n||n<0) return NaN; if(r===0||r===n) return 1; if(r>n-r) r=n-r; let res=1; for(let i=1;i<=r;i++) res=res*(n-r+i)/i; return Math.round(res); }
+        function permutations(n,r) { if(r<0||r>n||n<0) return NaN; if(r===0) return 1; let res=1; for(let i=n;i>n-r;i--) res*=i; return Math.round(res); }
+
+        function formatComplexResult(comp) {
+            if(comp===null||comp===undefined) return 'Error';
+            if(typeof comp==='number') return formatScientificNumber(comp);
+            if(comp&&typeof comp==='object') { const re=comp.re, im=comp.im; if(isNaN(re)||isNaN(im)) return 'Error'; if(!isFinite(re)||!isFinite(im)) return '∞'; const reF=formatScientificNumber(re), imF=formatScientificNumber(Math.abs(im)); if(Math.abs(im)<1e-15) return reF; if(Math.abs(re)<1e-15){ if(Math.abs(im-1)<1e-15) return 'i'; if(Math.abs(im+1)<1e-15) return '−i'; return (im>=0?'':'−')+imF+'i'; } const sign=im>=0?' + ':' − '; if(Math.abs(Math.abs(im)-1)<1e-15) return reF+sign+'i'; return reF+sign+imF+'i'; } return 'Error';
+        }
+
+        function formatScientificNumber(num) {
+            if(isNaN(num)) return 'Error'; if(!isFinite(num)) return num>0?'∞':'−∞'; if(num===0) return '0';
+            const abs=Math.abs(num); const sign=num<0?'−':'';
+            if(abs>=1e15||(abs<1e-10&&abs>0)){ const exp=Math.floor(Math.log10(abs)); const mant=abs/Math.pow(10,exp); return sign+parseFloat(mant.toPrecision(10))+'×10^'+exp; }
+            let str=parseFloat(num.toPrecision(12)).toString(); if(str.length>16){ const exp=Math.floor(Math.log10(abs)); const mant=abs/Math.pow(10,exp); return sign+parseFloat(mant.toPrecision(8))+'×10^'+exp; } return str;
+        }
+
+        // Keyboard support
+        document.addEventListener('keydown', function(e) {
+            if(currentMode==='normal') {
+                const k=e.key; if(k>='0'&&k<='9') normalInput(k); else if(k==='.') normalInput('.'); else if(k==='+') normalInput('add'); else if(k==='-') normalInput('subtract'); else if(k==='*') normalInput('multiply'); else if(k==='/'){ e.preventDefault(); normalInput('divide'); } else if(k==='Enter'||k==='=') normalInput('equals'); else if(k==='Escape') normalInput('clear'); else if(k==='%') normalInput('percent'); else if(k==='Backspace') normalInput('clear');
+            } else {
+                const k=e.key; if(k>='0'&&k<='9') complexInput(k); else if(k==='.') complexInput('.'); else if(k==='+') complexInput('+'); else if(k==='-') complexInput('-'); else if(k==='*') complexInput('*'); else if(k==='/'){ e.preventDefault(); complexInput('/'); } else if(k==='^') complexInput('^'); else if(k==='(') complexInput('('); else if(k===')') complexInput(')'); else if(k==='Enter'||k==='=') complexInput('equals'); else if(k==='Escape') complexInput('clear'); else if(k==='Backspace'){ e.preventDefault(); complexInput('delete'); } else if(k==='!') complexInput('factorial');
+            }
+        });
+
+        // Initialize
+        (function init() {
+            updateNormalDisplay();
+            updateComplexDisplay();
+            document.getElementById('complexCalculator').style.display = 'none';
+            document.getElementById('normalCalculator').style.display = 'flex';
+        })();
+    </script>
+</body>
+</html>
